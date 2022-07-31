@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract TheIndexDao is Ownable {
+contract TheIndexDao {
 	
 	address private _daoToken;
 
@@ -50,7 +50,6 @@ contract TheIndexDao is Ownable {
 
 	function voteForNewCollection(address tokenToVote, bool accept) external {
 		require(canVoteOn(msg.sender, tokenToVote), "Aready voted!");
-		(uint256 likes, uint256 dislikes) = getVotesForDeriv(tokenToVote);
 		if(accept) _likesForToken[tokenToVote] += votingPowerOf(msg.sender);
 		else _dislikesForToken[tokenToVote] += votingPowerOf(msg.sender);
 		setCantLongerVoteOn(msg.sender, tokenToVote);
@@ -66,22 +65,14 @@ contract TheIndexDao is Ownable {
 		];
 	}
 
+	function votingPowerOf(address voter) public view returns (uint256) {
+		return IERC20(_daoToken).balanceOf(voter);
+	}
+
 	function setCantLongerVoteOn(address voter, address tokenToVote) internal {
 		_hasAlreadyVotedFor[
 			keccak256(abi.encodePacked(voter, tokenToVote))
 		] = true;
-	}
-
-	function getVotesForDeriv(address derivToken) 
-		public
-		view
-		returns (uint256, uint256) 
-	{
-		return (_likesForToken[derivToken], _dislikesForToken[derivToken]);
-	}
-
-	function votingPowerOf(address voter) public view returns (uint256) {
-		return IERC20(_daoToken).balanceOf(voter);
 	}
 
 }
