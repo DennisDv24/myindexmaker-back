@@ -5,4 +5,4 @@ compiler:
     remappings:
       - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.7.2'
 
-dotenv: .env
+#dotenv: .env

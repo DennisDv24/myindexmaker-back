@@ -43,10 +43,19 @@ contract TheIndexDao {
      * @dev for now you can only suggest a collection once
 	 */
 	function suggestNewCollection(address derivToken) external {
-		if(_hasAlreadyBeenSuggested[derivToken]) return;
+		require(!_hasAlreadyBeenSuggested[derivToken], "Token already suggested!");
+		require(_isContract(derivToken), "Not a valid address");
 		_auditPendingCollections.push(derivToken);
 		_hasAlreadyBeenSuggested[derivToken] = true;
-	} 
+	}
+
+	function _isContract(address token) internal returns (bool) {
+		uint32 size;
+		assembly {
+			size := extcodesize(token)
+		}
+		return size > 0;
+	}
 
 	function voteForNewCollection(address tokenToVote, bool accept) external {
 		require(canVoteOn(msg.sender, tokenToVote), "Aready voted!");
@@ -74,5 +83,8 @@ contract TheIndexDao {
 			keccak256(abi.encodePacked(voter, tokenToVote))
 		] = true;
 	}
-
+	
+	function daoToken() public view returns (address) {
+		return _daoToken;
+	}
 }
