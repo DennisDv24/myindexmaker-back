@@ -16,7 +16,7 @@ contract NewCollectionSuggester is FxBaseRootTunnel {
 	{ }
 
 	function suggestNewCollection(address newCollection) public {
-		// address verification logic
+		// TODO address verification logic
 		_sendMessageToChild(abi.encode(newCollection));
 	}
  
