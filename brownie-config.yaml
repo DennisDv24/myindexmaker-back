@@ -1,8 +1,33 @@
 dependencies:
   - OpenZeppelin/openzeppelin-contracts@4.7.2
+  - fx-portal/contracts@1.0.4
 compiler:
   solc:
     remappings:
       - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.7.2'
+      - '@fxportal=fx-portal/contracts@1.0.4'
 
-#dotenv: .env
+dotenv: .env
+wallets:
+  from_key: ${PRIVATE_KEY}
+  test1: ${T1}
+  test2: ${T2}
+  test3: ${T3}
+  test4: ${T4}
+  test5: ${T5}
+  test6: ${T6}
+  test7: ${T7}
+  test8: ${T8}
+  test9: ${T9}
+
+networks:
+  goerli:
+    checkpoint_manager: '0x2890bA17EfE978480615e330ecB65333b880928e'
+    fx_root: '0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA'
+  mainnet:
+    checkpoint_manager: '0x86e4dc95c7fbdbf52e33d563bbdb00823894c287'
+    fx_root: '0xfe5e5D361b2ad62c541bAb87C45a0B9B018389a2'
+  polygon-test:
+    fx_child: '0xCf73231F28B7331BBe3124B907840A94851f9f11'
+  polygon-main:
+    fx_child: '0x8397259c983751DAf40400790063935a11afa28a'
