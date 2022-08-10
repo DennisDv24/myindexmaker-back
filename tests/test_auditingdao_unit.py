@@ -70,7 +70,7 @@ def test_cant_vote_twice():
     audit_dao.submitAuditForCollection(test_colle, True, {'from': acc})
     audit_dao.getVotesFor(test_colle) == (token.balanceOf(acc), 0)
     with brownie.reverts():
-        audit_dao.submitAuditForCollection(test_colle, False, {'from': acc})
+        audit_dao.submitAuditForCollection(test_colle, True, {'from': acc})
         assert False
     assert True
 
@@ -101,8 +101,21 @@ def test_multiple_votes():
     audit_dao.submitAuditForCollection(test_colle, False, {'from': acc2})
     assert audit_dao.getVotesFor(test_colle) == (bal1, bal0 + bal2)
 
-
+# TODO FIXME
+@pytest.mark.skip()
 def test_voting_twice_different_wallets():
-    pass
+    acc, extra_acc = accounts[0], accounts[1]
+    token, audit_dao = deploy_infra(acc)
+    test_colle = TestCollection.deploy({'from': acc})
+    audit_dao.suggestNewCollection(test_colle)
+
+    initial_bal = token.balanceOf(acc)
+    audit_dao.submitAuditForCollection(test_colle, True, {'from': acc})
+    token.transfer(extra_acc, extra_acc, {'from': acc})
+    audit_dao.submitAuditForCollection(test_colle, True, {'from': extra_acc})
+    proVotes, againstVotes = audit_dao.getVotesFor(test_colle)
+    assert proVotes + againstVotes < INITIAL_SUPPLY
+    assert proVotes + againstVotes == initial_bal
+
 
 

@@ -71,7 +71,7 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 	{
 		return !_hasAlreadyVotedFor[
 			keccak256(abi.encodePacked(voter, collection))
-		] && IERC20(_daoToken).balanceOf(voter) > 0;
+		] && votingPowerOf(voter) > 0;
 	}
 
 	function votingPowerOf(address voter) public view returns (uint256) {
