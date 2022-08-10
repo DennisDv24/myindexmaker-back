@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@fxportal/contracts/tunnel/FxBaseRootTunnel.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract NewCollectionSuggester is FxBaseRootTunnel {
 
@@ -16,8 +17,11 @@ contract NewCollectionSuggester is FxBaseRootTunnel {
 	{ }
 
 	function suggestNewCollection(address newCollection) public {
-		// TODO address verification logic
+		require(isERC721(newCollection), "Your token must implement ERC165");
 		_sendMessageToChild(abi.encode(newCollection));
 	}
- 
+	
+	function isERC721(address tokenToCheck) public view returns (bool) {
+		return IERC165(tokenToCheck).supportsInterface(0x80ac58cd);
+	}
 }

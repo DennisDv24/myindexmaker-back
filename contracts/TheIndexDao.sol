@@ -14,10 +14,8 @@ contract TheIndexDao is FxBaseChildTunnel, Ownable {
 	
 	mapping (address => bool) private _hasAlreadyBeenSuggested;
 	
-
 	mapping (address => uint256) private _likesForToken;
 	mapping (address => uint256) private _dislikesForToken;
-	
 	
 	/**
 	 * @dev the key is a keccak256 encoding of voter and token address
@@ -50,19 +48,16 @@ contract TheIndexDao is FxBaseChildTunnel, Ownable {
 	) internal virtual override {
 		_suggestNewCollection(abi.decode(message, (address)));
 	}
-	
-	/**
-	 * @dev you can make this function public only for testing purposes
-	 */
+
+	function suggestNewCollection(address derivToken) public onlyOwner {
+		_suggestNewCollection(derivToken);
+	}
+
 	function _suggestNewCollection(address derivToken) private {
 		require(!_hasAlreadyBeenSuggested[derivToken], "Token already suggested!");
 		require(_isContract(derivToken), "Not a valid address");
 		_auditPendingCollections.push(derivToken);
 		_hasAlreadyBeenSuggested[derivToken] = true;
-	}
-
-	function suggestNewCollection(address derivToken) public onlyOwner {
-		_suggestNewCollection(derivToken);
 	}
 
 	function _isContract(address token) internal returns (bool) {
