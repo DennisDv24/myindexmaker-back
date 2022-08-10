@@ -17,7 +17,11 @@ contract NewCollectionSuggester is FxBaseRootTunnel {
 	{ }
 
 	function suggestNewCollection(address newCollection) public {
-		require(isERC721(newCollection), "Your token must implement ERC165");
+		require(
+			isERC721(newCollection),
+			"Your NFT collection must be a ERC721, we will support other "
+			"standards in the future"
+		);
 		_sendMessageToChild(abi.encode(newCollection));
 	}
 	

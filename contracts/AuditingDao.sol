@@ -2,20 +2,21 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@fxportal/contracts/tunnel/FxBaseChildTunnel.sol";
 
 contract AuditingDao is FxBaseChildTunnel, Ownable {
 	
 	address private _daoToken;
+	address private _daoIndex;
 
-	address[] private _derivedCollections;
 	address[] private _auditPendingCollections;
 	
 	mapping (address => bool) private _hasAlreadyBeenSuggested;
 	
-	mapping (address => uint256) private _likesForToken;
-	mapping (address => uint256) private _dislikesForToken;
+	mapping (address => uint256) private _votesFor;
+	mapping (address => uint256) private _votesAgainst;
 	
 	/**
 	 * @dev the key is a keccak256 encoding of voter and token address
@@ -26,10 +27,6 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 		address daoToken_, address _fxChild
 	) FxBaseChildTunnel(_fxChild) {
 		_daoToken = daoToken_;	
-	}
-
-	function getDerivedCollections() external view returns (address[] memory) {
-		return _derivedCollections;
 	}
 	
 	function getAuditPendingDerivedCollections() 
@@ -55,34 +52,26 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 
 	function _suggestNewCollection(address derivToken) private {
 		require(!_hasAlreadyBeenSuggested[derivToken], "Token already suggested!");
-		require(_isContract(derivToken), "Not a valid address");
+		require(isERC721(derivToken), "Not a valid address");
 		_auditPendingCollections.push(derivToken);
 		_hasAlreadyBeenSuggested[derivToken] = true;
 	}
 
-	function _isContract(address token) internal returns (bool) {
-		uint32 size;
-		assembly {
-			size := extcodesize(token)
-		}
-		return size > 0;
-	}
-
-	function voteForNewCollection(address collection, bool accept) external {
-		require(canVoteOn(msg.sender, collection), "Aready voted!");
-		if(accept) _likesForToken[collection] += votingPowerOf(msg.sender);
-		else _dislikesForToken[collection] += votingPowerOf(msg.sender);
+	function submitAuditForCollection(address collection, bool accept) external {
+		require(canVote(msg.sender, collection), "Aready voted!");
+		if(accept) _votesFor[collection] += votingPowerOf(msg.sender);
+		else _votesAgainst[collection] += votingPowerOf(msg.sender);
 		setCantLongerVoteOn(msg.sender, collection);
 	}
 
-	function canVoteOn(address voter, address collection) 
+	function canVote(address voter, address collection) 
 		public
 		view 
 		returns (bool) 
 	{
 		return !_hasAlreadyVotedFor[
 			keccak256(abi.encodePacked(voter, collection))
-		];
+		] && IERC20(_daoToken).balanceOf(voter) > 0;
 	}
 
 	function votingPowerOf(address voter) public view returns (uint256) {
@@ -98,5 +87,26 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 	function daoToken() public view returns (address) {
 		return _daoToken;
 	}
+
+	function isERC721(address tokenToCheck) public view returns (bool) {
+		return IERC165(tokenToCheck).supportsInterface(0x80ac58cd);
+	}
+	
+	function getVotesFor(address collection) 
+		public 
+		view 
+		returns (uint256, uint256) 
+	{
+		return (_votesFor[collection], _votesAgainst[collection]);
+	}
+
+	function setTheIndexDao(address daoAddress) public onlyOwner {
+		_daoIndex = daoAddress;	
+	}
+
+	function theIndexDao() public view returns (address) {
+		return _daoIndex;
+	}
+
 }
 
