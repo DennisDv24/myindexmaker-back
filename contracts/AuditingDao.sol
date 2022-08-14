@@ -2,11 +2,19 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@fxportal/contracts/tunnel/FxBaseChildTunnel.sol";
 
-contract AuditingDao is FxBaseChildTunnel, Ownable {
+import "./MetaGovernor.sol";
+
+
+contract AuditingDao is 
+	FxBaseChildTunnel,
+	Ownable,
+	MetaGovernor
+{
 	
 	address private _daoToken;
 	address private _daoIndex;
@@ -23,9 +31,10 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 	 */
 	mapping (bytes32 => bool) private _hasAlreadyVotedFor;
 
-	constructor(
-		address daoToken_, address _fxChild
-	) FxBaseChildTunnel(_fxChild) {
+	constructor(address daoToken_, address _fxChild, uint256 quorumFraction) 
+		FxBaseChildTunnel(_fxChild) 
+		MetaGovernor(_, _, IERC20Metadata(daoToken_).name(), quorumFraction)
+	{
 		_daoToken = daoToken_;	
 	}
 	
