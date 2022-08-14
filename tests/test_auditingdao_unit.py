@@ -52,7 +52,6 @@ def test_voting_power():
     acc = accounts[0]
     extra_acc = accounts[1]
     token, audit_dao = deploy_infra(acc)
-    token.delegate(acc, {'from': acc})
 
     test_colle = TestCollection.deploy({'from': acc})
     audit_dao.suggestNewCollection(test_colle, {'from': acc})
@@ -66,7 +65,6 @@ def test_multiple_voting_power():
     acc = accounts[0]
     extra_acc = accounts[1]
     token, audit_dao = deploy_infra(acc)
-    token.delegate(acc , {'from': acc})
     test_colle = TestCollection.deploy({'from': acc})
 
     expected_extra_acc_voting_power = 1
@@ -74,7 +72,6 @@ def test_multiple_voting_power():
         INITIAL_SUPPLY - expected_extra_acc_voting_power
     )
     token.transfer(extra_acc, 1, {'from': acc})  
-    token.delegate(extra_acc , {'from': extra_acc})
     audit_dao.suggestNewCollection(test_colle, {'from': acc})
     chain.mine(1)
 

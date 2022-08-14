@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "./ERC20Votes.sol";
 
 contract TheIndexToken is ERC20, ERC20Permit, ERC20Votes {
 
@@ -19,7 +19,7 @@ contract TheIndexToken is ERC20, ERC20Permit, ERC20Votes {
         override(ERC20, ERC20Votes)
     {
         super._afterTokenTransfer(from, to, amount);
-    }
+	}
 
     function _mint(address to, uint256 amount)
         internal

@@ -47,5 +47,16 @@ def delegation():
     print('Voting power:')
     print(audit_dao.votingPowerFor(test_colle, {'from': acc}))
 
+def custom_delegation_events():
+    acc = accounts[0]
+    extra_acc = accounts[1]
+    token, audit_dao = deploy_infra(acc)
+    test_colle = TestCollection.deploy({'from': acc})
+
+    tx = token.transfer(extra_acc, 500, {'from': acc})
+    tx.wait(1)
+    print(tx.info())
+
+
 def main():
-    try_delegation_post_suggestion()
+    custom_delegation_events()
