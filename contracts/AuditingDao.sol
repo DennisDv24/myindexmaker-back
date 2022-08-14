@@ -62,11 +62,20 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 	}
 
 	function submitAuditForCollection(address collection, bool accept) external {
-		//require(canVote(msg.sender, collection), "Aready voted!");
+		require(canVote(msg.sender, collection), "Aready voted!");
 		if(accept) _votesFor[collection] += _votingPowerFor(collection, msg.sender);
 		else _votesAgainst[collection] += _votingPowerFor(collection, msg.sender);
-		//setCantLongerVoteOn(msg.sender, collection); 
-		//How do i manage it with IVotes.sol?
+		setCantLongerVoteOn(msg.sender, collection); 
+	}
+
+	function canVote(address voter, address collection) 
+		public
+		view 
+		returns (bool) 
+	{
+		return !_hasAlreadyVotedFor[
+			keccak256(abi.encodePacked(voter, collection))
+		] && _votingPowerFor(collection, voter) > 0;
 	}
 	
 	function votingPowerFor(address collection) public view returns (uint256) {
@@ -79,36 +88,12 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 		return daoToken.getPastVotes(voter, _votationStartForCollection[collection]);
 	}
 
-	/*
-	function canVote(address voter, address collection) 
-		public
-		view 
-		returns (bool) 
-	{
-		return !_hasAlreadyVotedFor[
-			keccak256(abi.encodePacked(voter, collection))
-		] && votingPowerOf(voter) > 0;
-	}
-
-	function votingPowerOf(address voter) public view returns (uint256) {
-		return IERC20(_daoToken).balanceOf(voter);
-	}
-
 	function setCantLongerVoteOn(address voter, address collection) internal {
 		_hasAlreadyVotedFor[
 			keccak256(abi.encodePacked(voter, collection))
 		] = true;
 	}
-	*/
-
-	// TODO If IVotes is public immutable do I need this function?
-	/*
-	function daoToken() public view returns (address) {
-		return address(daoToken);
-	}
-	*/
 	
-	/*
 	function getVotesFor(address collection) 
 		public 
 		view 
@@ -116,7 +101,6 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 	{
 		return (_votesFor[collection], _votesAgainst[collection]);
 	}
-	*/
 
 	function setTheIndexDao(address daoAddress) public onlyOwner {
 		_daoIndex = daoAddress;	
