@@ -162,9 +162,31 @@ def test_voting_twice_different_wallets():
     assert proVotes + againstVotes <= INITIAL_SUPPLY
     assert proVotes + againstVotes == initial_bal
 
-# TODO
 def test_voting_power_flow():
     acc, extra_acc = accounts[0], accounts[1]
     token, audit_dao = deploy_infra(acc)
+    chain.mine(1)
+
+    full_supply_block = chain.height
+    assert token.balanceOf(acc) == token.getVotes(acc)
+    transfered_amount = 666
+    token.transfer(extra_acc, transfered_amount, {'from': acc})
+    chain.mine(1)
+
+    post_transfer_block = chain.height
+    assert token.balanceOf(acc) == token.getVotes(acc)
+    assert token.balanceOf(extra_acc) == token.getVotes(extra_acc)
+    assert INITIAL_SUPPLY == token.getPastVotes(acc, full_supply_block)
+    assert 0 == token.getPastVotes(extra_acc, full_supply_block)
+    
+    post_transfer_amount = 665
+    token.transfer(acc, post_transfer_amount, {'from': extra_acc}) 
+    chain.mine(1)
+    assert INITIAL_SUPPLY - transfered_amount == token.getPastVotes(
+        acc, post_transfer_block
+    )
+    assert transfered_amount == token.getPastVotes(extra_acc, post_transfer_block)
+    assert token.balanceOf(acc) == token.getVotes(acc)
+    assert token.balanceOf(extra_acc) == token.getVotes(extra_acc)
 
 
