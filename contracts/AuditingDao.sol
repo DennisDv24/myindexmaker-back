@@ -59,6 +59,7 @@ contract AuditingDao is
 		_suggestNewCollection(derivToken);
 	}
 
+	// TODO it will use the propose governor function
 	function _suggestNewCollection(address derivToken) private {
 		require(!_hasAlreadyBeenSuggested[derivToken], "Token already suggested!");
 		require(isERC721(derivToken), "Not a valid address");

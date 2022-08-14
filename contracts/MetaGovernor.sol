@@ -27,7 +27,7 @@ contract MetaGovernor is
     {}
   	
 	function votingDelay() public pure override returns (uint256) {
-        return 6575; // 1 day
+        return 1; 
     }
 
     function votingPeriod() public pure override returns (uint256) {
@@ -66,8 +66,14 @@ contract MetaGovernor is
     {
         return super.state(proposalId);
     }
-
-    function propose(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, string memory description)
+	
+	// TODO override this function
+    function propose(
+		address[] memory targets,
+		uint256[] memory values,
+		bytes[] memory calldatas,
+		string memory description
+	)
         public
         override(Governor, GovernorCompatibilityBravo, IGovernor)
         returns (uint256)
@@ -75,14 +81,25 @@ contract MetaGovernor is
         return super.propose(targets, values, calldatas, description);
     }
 
-    function _execute(uint256 proposalId, address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
+    function _execute(
+		uint256 proposalId,
+		address[] memory targets,
+		uint256[] memory values,
+		bytes[] memory calldatas,
+		bytes32 descriptionHash
+	)
         internal
         override(Governor, GovernorTimelockControl)
     {
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
-    function _cancel(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
+    function _cancel(
+		address[] memory targets,
+		uint256[] memory values,
+		bytes[] memory calldatas,
+		bytes32 descriptionHash
+	)
         internal
         override(Governor, GovernorTimelockControl)
         returns (uint256)
