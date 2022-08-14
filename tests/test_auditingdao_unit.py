@@ -26,26 +26,42 @@ def deploy_infra(acc = None):
 def test_base_cases():
     token, audit_dao = deploy_infra()
     assert audit_dao.getAuditPendingDerivedCollections() == []
-    assert audit_dao.daoToken == token
+    assert audit_dao.daoToken() == token
     assert audit_dao.theIndexDao() == brownie.ZERO_ADDRESS
 
-@pytest.mark.skip()
-def test_voting_power():
-    acc = accounts[0]
-    extra_acc = accounts[1]
-    token, audit_dao = deploy_infra(acc)
-    assert audit_dao.votingPowerOf(acc) == INITIAL_SUPPLY
-    token.transfer(extra_acc, 1, {'from': acc})
-    assert audit_dao.votingPowerOf(extra_acc) == 1
-    assert audit_dao.votingPowerOf(acc) == INITIAL_SUPPLY - 1
-
-@pytest.mark.skip()
-def test_suggest_new_collection():
+def test_suggest_first_collection():
     acc = accounts[0]
     token, audit_dao = deploy_infra(acc)
     test_colle = TestCollection.deploy({'from': acc})
     audit_dao.suggestNewCollection(test_colle)
     assert audit_dao.getAuditPendingDerivedCollections() == [test_colle]
+
+def test_suggest_new_collection():
+    acc = accounts[0]
+    token, audit_dao = deploy_infra(acc)
+    test_colle = TestCollection.deploy({'from': acc})
+    audit_dao.suggestNewCollection(test_colle, {'from': acc})
+    assert audit_dao.getAuditPendingDerivedCollections() == [test_colle]
+    test_colle2 = TestCollection.deploy({'from': acc})
+    audit_dao.suggestNewCollection(test_colle2, {'from': acc})
+    assert audit_dao.getAuditPendingDerivedCollections() == [
+        test_colle, test_colle2
+    ]
+
+def test_voting_power():
+    acc = accounts[0]
+    extra_acc = accounts[1]
+    token, audit_dao = deploy_infra(acc)
+    test_colle = TestCollection.deploy({'from': acc})
+    tx = audit_dao.suggestNewCollection(test_colle, {'from': acc})
+    tx.wait(1)
+    voting_power = audit_dao.votingPowerFor(test_colle, {'from': acc})
+    expected_voting_power = INITIAL_SUPPLY
+    assert voting_power == expected_voting_power
+
+def main():
+    test_voting_power()
+
 
 @pytest.mark.skip()
 def test_audit_can_vote():

@@ -63,15 +63,22 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 
 	function submitAuditForCollection(address collection, bool accept) external {
 		//require(canVote(msg.sender, collection), "Aready voted!");
-		if(accept) _votesFor[collection] += daoToken.getPastVotes(
-			msg.sender, _votationStartForCollection[collection]
-		);
-		else _votesAgainst[collection] += daoToken.getPastVotes(
-			msg.sender, _votationStartForCollection[collection]
-		);
+		if(accept) _votesFor[collection] += _votingPowerFor(collection, msg.sender);
+		else _votesAgainst[collection] += _votingPowerFor(collection, msg.sender);
 		//setCantLongerVoteOn(msg.sender, collection); 
 		//How do i manage it with IVotes.sol?
 	}
+	
+	function votingPowerFor(address collection) public view returns (uint256) {
+		return _votingPowerFor(collection, msg.sender);
+	}
+
+	function _votingPowerFor(
+		address collection, address voter
+	) internal view returns (uint256) {
+		return daoToken.getPastVotes(voter, _votationStartForCollection[collection]);
+	}
+
 	/*
 	function canVote(address voter, address collection) 
 		public
@@ -109,6 +116,7 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 	{
 		return (_votesFor[collection], _votesAgainst[collection]);
 	}
+	*/
 
 	function setTheIndexDao(address daoAddress) public onlyOwner {
 		_daoIndex = daoAddress;	
@@ -117,7 +125,15 @@ contract AuditingDao is FxBaseChildTunnel, Ownable {
 	function theIndexDao() public view returns (address) {
 		return _daoIndex;
 	}
-	*/
+	
+	function votationStartForCollection(address collectionToCheck) 
+		public 
+		view 
+		returns 
+		(uint256) 
+	{
+		return _votationStartForCollection[collectionToCheck];
+	}
 
 }
 
