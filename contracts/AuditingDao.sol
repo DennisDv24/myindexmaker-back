@@ -6,20 +6,15 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@fxportal/contracts/tunnel/FxBaseChildTunnel.sol";
+import "@openzeppelin/contracts/governance/utils/IVotes.sol";
 
-import "./MetaGovernor.sol";
-
-
-contract AuditingDao is 
-	FxBaseChildTunnel,
-	Ownable,
-	MetaGovernor
-{
+contract AuditingDao is FxBaseChildTunnel, Ownable {
 	
-	address private _daoToken;
+	IVotes public immutable daoToken;
 	address private _daoIndex;
-
+	
 	address[] private _auditPendingCollections;
+	mapping (address => uint256) private _votationStartForCollection;
 	
 	mapping (address => bool) private _hasAlreadyBeenSuggested;
 	
@@ -31,11 +26,10 @@ contract AuditingDao is
 	 */
 	mapping (bytes32 => bool) private _hasAlreadyVotedFor;
 
-	constructor(address daoToken_, address _fxChild, uint256 quorumFraction) 
-		FxBaseChildTunnel(_fxChild) 
-		MetaGovernor(_, _, IERC20Metadata(daoToken_).name(), quorumFraction)
-	{
-		_daoToken = daoToken_;	
+	constructor(
+		IVotes _daoToken, address _fxChild
+	) FxBaseChildTunnel(_fxChild) {
+		daoToken = _daoToken;	
 	}
 	
 	function getAuditPendingDerivedCollections() 
@@ -62,18 +56,23 @@ contract AuditingDao is
 	// TODO it will use the propose governor function
 	function _suggestNewCollection(address derivToken) private {
 		require(!_hasAlreadyBeenSuggested[derivToken], "Token already suggested!");
-		require(isERC721(derivToken), "Not a valid address");
 		_auditPendingCollections.push(derivToken);
+		_votationStartForCollection[derivToken] = block.number;
 		_hasAlreadyBeenSuggested[derivToken] = true;
 	}
 
 	function submitAuditForCollection(address collection, bool accept) external {
-		require(canVote(msg.sender, collection), "Aready voted!");
-		if(accept) _votesFor[collection] += votingPowerOf(msg.sender);
-		else _votesAgainst[collection] += votingPowerOf(msg.sender);
-		setCantLongerVoteOn(msg.sender, collection);
+		//require(canVote(msg.sender, collection), "Aready voted!");
+		if(accept) _votesFor[collection] += daoToken.getPastVotes(
+			msg.sender, _votationStartForCollection[collection]
+		);
+		else _votesAgainst[collection] += daoToken.getPastVotes(
+			msg.sender, _votationStartForCollection[collection]
+		);
+		//setCantLongerVoteOn(msg.sender, collection); 
+		//How do i manage it with IVotes.sol?
 	}
-
+	/*
 	function canVote(address voter, address collection) 
 		public
 		view 
@@ -93,15 +92,16 @@ contract AuditingDao is
 			keccak256(abi.encodePacked(voter, collection))
 		] = true;
 	}
-	
-	function daoToken() public view returns (address) {
-		return _daoToken;
-	}
+	*/
 
-	function isERC721(address tokenToCheck) public view returns (bool) {
-		return IERC165(tokenToCheck).supportsInterface(0x80ac58cd);
+	// TODO If IVotes is public immutable do I need this function?
+	/*
+	function daoToken() public view returns (address) {
+		return address(daoToken);
 	}
+	*/
 	
+	/*
 	function getVotesFor(address collection) 
 		public 
 		view 
@@ -117,6 +117,7 @@ contract AuditingDao is
 	function theIndexDao() public view returns (address) {
 		return _daoIndex;
 	}
+	*/
 
 }
 
