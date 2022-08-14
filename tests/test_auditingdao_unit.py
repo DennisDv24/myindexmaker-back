@@ -1,6 +1,6 @@
 import brownie
 from brownie import TheIndexToken, AuditingDao, TestCollection
-from brownie import accounts, network, config
+from brownie import accounts, network, config, chain
 from brownie.exceptions import VirtualMachineError
 import pytest
 from web3 import Web3
@@ -52,16 +52,36 @@ def test_voting_power():
     acc = accounts[0]
     extra_acc = accounts[1]
     token, audit_dao = deploy_infra(acc)
+    token.delegate(acc, {'from': acc})
+
     test_colle = TestCollection.deploy({'from': acc})
-    tx = audit_dao.suggestNewCollection(test_colle, {'from': acc})
-    tx.wait(1)
+    audit_dao.suggestNewCollection(test_colle, {'from': acc})
+    chain.mine(1)
+
     voting_power = audit_dao.votingPowerFor(test_colle, {'from': acc})
     expected_voting_power = INITIAL_SUPPLY
     assert voting_power == expected_voting_power
 
-def main():
-    test_voting_power()
+def test_multiple_voting_power():
+    acc = accounts[0]
+    extra_acc = accounts[1]
+    token, audit_dao = deploy_infra(acc)
+    token.delegate(acc , {'from': acc})
+    test_colle = TestCollection.deploy({'from': acc})
 
+    expected_extra_acc_voting_power = 1
+    expected_acc_voting_power = (
+        INITIAL_SUPPLY - expected_extra_acc_voting_power
+    )
+    token.transfer(extra_acc, 1, {'from': acc})  
+    token.delegate(extra_acc , {'from': extra_acc})
+    audit_dao.suggestNewCollection(test_colle, {'from': acc})
+    chain.mine(1)
+
+    acc_power = audit_dao.votingPowerFor(test_colle, {'from': acc})
+    extra_acc_power = audit_dao.votingPowerFor(test_colle, {'from': extra_acc})
+    assert acc_power == expected_acc_voting_power
+    assert extra_acc_power == expected_extra_acc_voting_power
 
 @pytest.mark.skip()
 def test_audit_can_vote():

@@ -1,6 +1,6 @@
 import brownie
 from brownie import TheIndexToken, AuditingDao, TestCollection
-from brownie import accounts, network, config
+from brownie import accounts, network, config, chain
 from brownie.exceptions import VirtualMachineError
 from web3 import Web3
 
@@ -22,17 +22,30 @@ def deploy_infra(acc = None):
     audit_dao = deploy_auditing_dao(acc, token)
     return token, audit_dao
 
-def show_blocks_for_infra():
+def try_delegation_post_suggestion():
     acc = accounts[0]
     extra_acc = accounts[1]
     token, audit_dao = deploy_infra(acc)
     test_colle = TestCollection.deploy({'from': acc})
-    tx = audit_dao.suggestNewCollection(test_colle, {'from': acc})
-    tx.wait(1)
-    print('Block for new suggestion:')
-    print(audit_dao.votationStartForCollection(test_colle))
-    print('Voting power for that block:')
+    audit_dao.suggestNewCollection(test_colle, {'from': acc})
+    chain.mine(1)
+    print('Voting power without delegating:')
+    print(audit_dao.votingPowerFor(test_colle, {'from': acc}))
+    token.delegate(acc, {'from': acc})
+    print('Voting power after delegating:')
+    print(audit_dao.votingPowerFor(test_colle, {'from': acc}))
+    print('So basically you need to delegate before anything')
+
+def delegation():
+    acc = accounts[0]
+    extra_acc = accounts[1]
+    token, audit_dao = deploy_infra(acc)
+    test_colle = TestCollection.deploy({'from': acc})
+    token.delegate(acc, {'from': acc})
+    audit_dao.suggestNewCollection(test_colle, {'from': acc})
+    chain.mine(1)
+    print('Voting power:')
     print(audit_dao.votingPowerFor(test_colle, {'from': acc}))
 
 def main():
-    show_blocks_for_infra()
+    try_delegation_post_suggestion()
